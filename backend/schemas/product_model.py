@@ -1,4 +1,4 @@
-﻿from typing import List
+from typing import List
 from pydantic import BaseModel, Field
 
 
@@ -6,21 +6,36 @@ class Requirement(BaseModel):
     description: str
     type: str = "functional"
 
+    model_config = {
+        "extra": "forbid"
+    }
+
 
 class UserStory(BaseModel):
     actor: str
     action: str
     goal: str
 
+    model_config = {
+        "extra": "forbid"
+    }
+
 
 class AcceptanceCriterion(BaseModel):
     description: str
 
+    model_config = {
+        "extra": "forbid"
+    }
+
 
 class ProductModel(BaseModel):
-    product: str
-    problem: str
+    product: str = ""
+    problem: str = ""
+
+
     users: List[str] = Field(default_factory=list)
+    current_context: List[str] = Field(default_factory=list)
     goals: List[str] = Field(default_factory=list)
 
     requirements: List[Requirement] = Field(
@@ -34,3 +49,11 @@ class ProductModel(BaseModel):
     acceptance_criteria: List[AcceptanceCriterion] = Field(
         default_factory=list
     )
+
+    open_questions: List[str] = Field(
+        default_factory=list
+    )
+
+    model_config = {
+        "extra": "forbid"
+    }
