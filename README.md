@@ -1,18 +1,36 @@
 # SpecLens
 
-SpecLens is a local AI product development tool that turns an initial product idea into a structured product specification.
+SpecLens is a local AI product development tool that helps turn a rough product idea into a structured product specification, PRD, critique, and early MVP prototype.
 
-The project is built around the idea that a product concept usually starts as incomplete information. Instead of asking a user to write a complete PRD from the beginning, SpecLens guides the user through product discovery and gradually builds a structured product state.
+The idea behind SpecLens is simple. Most product ideas start with incomplete information. Instead of asking someone to write a complete PRD from the beginning, SpecLens guides the user through product discovery and gradually builds the specification.
 
-The current system uses a local language model through Ollama. The backend is built with FastAPI and Pydantic, while the frontend is built with Next.js and TypeScript.
+The current version runs locally using Ollama and Qwen3 4B. The backend uses FastAPI and Pydantic, while the frontend uses Next.js, React, and TypeScript.
 
-## What SpecLens currently does
+## What It Does
 
-### Product Discovery
+SpecLens currently takes a product idea through the following workflow:
 
-The discovery agent takes a user's product idea and extracts useful product information from each message.
+Product idea
 
-The current product state contains:
+Product discovery
+
+Structured product specification
+
+PRD generation
+
+PRD critique
+
+MVP prototype generation
+
+DOCX export
+
+The structured product state is shared between these stages so that the information collected during discovery can be reused throughout the rest of the workflow.
+
+## Product Discovery
+
+The discovery system takes a rough product idea and gradually extracts the information needed to build a product specification.
+
+The current product state includes:
 
 Product
 
@@ -32,13 +50,13 @@ Acceptance criteria
 
 Open questions
 
-The state is preserved between discovery messages so that information already collected is not lost.
+The discovery process preserves information collected from previous messages and asks one follow up question at a time to identify missing information.
 
-The discovery agent also asks one follow up question at a time to identify missing information and progressively improve the specification.
+The system is designed to work with different types of products and is not restricted to a specific industry or product category.
 
-### Structured Product Model
+## Structured Product Model
 
-The product state is represented with Pydantic models.
+The product specification is represented using Pydantic models.
 
 Requirements contain a description and type.
 
@@ -46,31 +64,95 @@ User stories contain an actor, action, and goal.
 
 Acceptance criteria contain a description.
 
-This provides a validated structure between the language model, backend, PRD generation, critique, and prototype generation stages.
+This provides a structured layer between the language model and the rest of the application.
 
-### PRD Generation
+The same product state is used by the PRD generator, PRD critic, prototype generator, and document exporter.
+
+## PRD Generation
 
 SpecLens can generate a PRD from the structured product state.
 
-The current generator produces sections covering the product, problem, target users, goals, requirements, user stories, acceptance criteria, edge cases, and open questions.
+The current PRD includes:
 
-The current implementation is intentionally simple and provides the foundation for a more complete PRD generation system.
+Product
 
-### PRD Critique
+Problem
 
-The project includes a PRD critic that evaluates the current product specification.
+Target users
 
-It provides an overall score, strengths, issues, severity levels, categories, and suggestions.
+Goals
 
-The purpose of the critic is to identify gaps before the product moves into implementation.
+Requirements
 
-### MVP Prototype Generation
+User stories
 
-SpecLens also includes an early prototype generation pipeline.
+Acceptance criteria
 
-The backend can generate an HTML prototype from the structured product state. The prototype system is intended to turn the product specification into a basic interactive representation of the proposed product.
+Edge cases
 
-This creates a path from an idea to a specification and then to something that can be visually explored.
+Open questions
+
+The current generator provides the foundation for a more detailed PRD system that will eventually cover areas such as product strategy, MVP scope, success metrics, prioritization, risks, validation, and roadmap planning.
+
+## PRD Critique
+
+The PRD critic evaluates the current product specification and identifies areas that need more work.
+
+It provides:
+
+Overall score
+
+Strengths
+
+Issues
+
+Severity
+
+Category
+
+Suggestions
+
+The purpose of this stage is to identify gaps in the specification before moving towards implementation.
+
+## MVP Prototype Generation
+
+SpecLens includes an early prototype generation pipeline.
+
+The system uses the structured product state to generate an HTML representation of the proposed product.
+
+The prototype is intended to make the product idea easier to understand and review before actual development begins.
+
+The current prototype system is an early implementation and will be improved to make the generated interface more closely reflect the actual requirements and user flows.
+
+## DOCX Export
+
+SpecLens also includes a document export system for generating a Word document from the product specification.
+
+This makes it possible to take the generated product information outside the application and use it as a working product document.
+
+The exporter is part of the backend and works with the structured product state rather than directly using raw model output.
+
+## Frontend
+
+The frontend provides the main interface for working with SpecLens.
+
+The current interface includes:
+
+Discovery panel
+
+PRD document view
+
+PRD critique panel
+
+Prototype panel
+
+Header
+
+Hero section
+
+Reusable UI components
+
+The frontend is built with Next.js, React, and TypeScript.
 
 ## Technology
 
@@ -81,6 +163,8 @@ Python
 FastAPI
 
 Pydantic
+
+Requests
 
 Ollama
 
@@ -94,9 +178,15 @@ React
 
 TypeScript
 
-The language model runs locally through Ollama rather than relying on a hosted model API.
+Document generation
 
-## Current Architecture
+Python
+
+python-docx
+
+## Architecture
+
+The current workflow is:
 
 User idea
 
@@ -110,42 +200,48 @@ PRD critique
 
 MVP prototype generation
 
-The structured product state acts as the central representation shared by the different stages.
+Document export
 
-## Current Development Status
+The structured product state acts as the central layer connecting the different stages.
 
-SpecLens is currently a working beta rather than a finished product.
+## Project Structure
 
-The core backend pipeline is functional and has been tested through the API.
-
-The discovery system can preserve information across multiple messages and populate different parts of the product state.
-
-The PRD generator can convert the state into a readable PRD.
-
-The critic can evaluate the specification and identify missing information.
-
-The prototype generator can produce an early HTML representation from the product state.
-
-The frontend currently exposes the main discovery, PRD generation, and critique workflow. The interface is still in an early development state and needs further work before it is ready for public use.
-
-## Next Development
-
-The next stage is to improve the PRD generation system.
-
-The goal is to make SpecLens capable of producing a much more complete product document from a rough idea while clearly separating information provided by the user from assumptions made during product discovery.
-
-The PRD format will be expanded to include areas such as product overview, problem analysis, target users, jobs to be done, proposed solution, MVP scope, success metrics, user stories, functional requirements, non functional requirements, prioritization, risks, validation planning, roadmap, and open questions.
-
-The system should remain general purpose. It should not be tied to a particular industry, company, product category, or feature type.
-
-The prototype generator will then be improved so that the generated prototype reflects the product requirements instead of producing a generic interface.
-
-The frontend will also be redesigned into a complete product workflow where a user can enter an idea, continue discovery, review the structured specification, generate the PRD, inspect the critique, and generate an MVP prototype without interacting directly with the backend API.
-
-Additional planned improvements include better model output reliability, stronger validation, improved handling of incomplete information, better prototype generation, persistent projects, and deployment of the application for public access.
-
-## Development Goal
-
-The long term goal of SpecLens is to create a product development workspace where a rough idea can be progressively transformed into a validated product specification and an MVP prototype.
-
-The project is being developed incrementally, starting with local AI and a small validated product state before adding more advanced product reasoning and generation capabilities.
+```text
+speclens
+|
+|-- backend
+|   |-- agents
+|   |   |-- discovery.py
+|   |   |-- prd_generator.py
+|   |   |-- prd_critic.py
+|   |   |-- prototype_generator.py
+|   |
+|   |-- analysis
+|   |-- exporters
+|   |   |-- docx_exporter.py
+|   |
+|   |-- llm
+|   |   |-- ollama_client.py
+|   |
+|   |-- parser
+|   |-- schemas
+|   |-- tests
+|   |-- main.py
+|
+|-- frontend
+|   |-- app
+|   |-- components
+|   |   |-- CritiquePanel.tsx
+|   |   |-- DiscoveryPanel.tsx
+|   |   |-- Header.tsx
+|   |   |-- Hero.tsx
+|   |   |-- PRDDocument.tsx
+|   |   |-- PrototypePanel.tsx
+|   |   |-- ui.tsx
+|   |
+|   |-- lib
+|   |-- package.json
+|
+|-- docs
+|-- examples
+|-- README.md
