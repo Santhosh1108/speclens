@@ -1,0 +1,39 @@
+{
+  "app_name": "StudyBuddy",
+  "tagline": "Find affordable, vetted tutors near your campus in minutes.",
+  "primary_action": "Search for a tutor",
+  "pages": [
+    {
+      "name": "Search",
+      "purpose": "Students find and filter available tutors by subject and price.",
+      "components": [
+        { "name": "Subject search bar", "purpose": "Type a subject or class name to find matching tutors." },
+        { "name": "Filters", "purpose": "Narrow results by price range, availability, and rating." },
+        { "name": "Tutor cards", "purpose": "Show photo, name, subjects, rate, and rating for each tutor." }
+      ]
+    },
+    {
+      "name": "Tutor Profile",
+      "purpose": "Detailed view of a tutor before booking a session.",
+      "components": [
+        { "name": "Profile header", "purpose": "Photo, name, subjects taught, and average rating." },
+        { "name": "Availability calendar", "purpose": "Shows open time slots for the next 2 weeks." },
+        { "name": "Book session button", "purpose": "Starts the booking flow for a selected time slot." }
+      ]
+    },
+    {
+      "name": "Booking Confirmation",
+      "purpose": "Confirms a session was booked and shows next steps.",
+      "components": [
+        { "name": "Confirmation summary", "purpose": "Tutor, subject, date/time, and price." },
+        { "name": "Add to calendar", "purpose": "One-tap add to the student's calendar app." }
+      ]
+    }
+  ],
+  "primary_flow": [
+    "Student searches for a subject",
+    "Student filters and picks a tutor",
+    "Student books an open time slot",
+    "Student receives confirmation"
+  ]
+}

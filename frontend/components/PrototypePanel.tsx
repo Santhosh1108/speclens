@@ -1,10 +1,29 @@
 "use client";
 
+import { useState } from "react";
+
 export default function PrototypePanel({ prototype }: { prototype: any }) {
+  const [copied, setCopied] = useState(false);
+
   function openFullscreen() {
     const blob = new Blob([prototype.html], { type: "text/html" });
     const url = URL.createObjectURL(blob);
     window.open(url, "_blank");
+  }
+
+  async function copyForFigma() {
+    // prototype.prototype is the structured PrototypeModel JSON
+    // (app_name, tagline, pages[], primary_flow[]) — this is what the
+    // SpecLens Figma plugin expects pasted into its textarea.
+    const payload = JSON.stringify(prototype.prototype, null, 2);
+
+    try {
+      await navigator.clipboard.writeText(payload);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (error) {
+      console.error("Clipboard copy failed:", error);
+    }
   }
 
   return (
@@ -46,21 +65,39 @@ export default function PrototypePanel({ prototype }: { prototype: any }) {
           </h2>
         </div>
 
-        <button
-          onClick={openFullscreen}
-          style={{
-            background: "var(--paper-raised)",
-            border: "1px solid var(--line-strong)",
-            borderRadius: "var(--radius-sm)",
-            padding: "10px 14px",
-            cursor: "pointer",
-            fontSize: "13px",
-            fontWeight: 500,
-            color: "var(--ink)",
-          }}
-        >
-          Open Fullscreen ↗
-        </button>
+        <div style={{ display: "flex", gap: "10px" }}>
+          <button
+            onClick={copyForFigma}
+            style={{
+              background: copied ? "var(--ok-soft)" : "var(--paper-raised)",
+              border: `1px solid ${copied ? "var(--ok)" : "var(--line-strong)"}`,
+              borderRadius: "var(--radius-sm)",
+              padding: "10px 14px",
+              cursor: "pointer",
+              fontSize: "13px",
+              fontWeight: 500,
+              color: copied ? "var(--ok)" : "var(--ink)",
+            }}
+          >
+            {copied ? "Copied ✓" : "Copy for Figma"}
+          </button>
+
+          <button
+            onClick={openFullscreen}
+            style={{
+              background: "var(--paper-raised)",
+              border: "1px solid var(--line-strong)",
+              borderRadius: "var(--radius-sm)",
+              padding: "10px 14px",
+              cursor: "pointer",
+              fontSize: "13px",
+              fontWeight: 500,
+              color: "var(--ink)",
+            }}
+          >
+            Open Fullscreen ↗
+          </button>
+        </div>
       </div>
 
       <div
