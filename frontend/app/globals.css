@@ -1,0 +1,133 @@
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap');
+
+:root {
+  --ink: #12141c;
+  --ink-soft: #2a2d38;
+  --paper: #faf9f6;
+  --paper-raised: #ffffff;
+  --focus: #2f4cff;
+  --focus-soft: #eef1ff;
+  --graphite: #5b5f6b;
+  --graphite-light: #9a9da5;
+  --line: #e6e4dd;
+  --line-strong: #d7d5cc;
+
+  --danger: #b3261e;
+  --danger-soft: #fbeceb;
+  --warn: #a15c00;
+  --warn-soft: #fdf1e0;
+  --ok: #1f5c3f;
+  --ok-soft: #e9f5ee;
+
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
+
+  --font-display: "Space Grotesk", ui-sans-serif, system-ui, sans-serif;
+  --font-body: "Inter", ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SF Mono", monospace;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+}
+
+::selection {
+  background: var(--focus);
+  color: #fff;
+}
+
+a {
+  color: inherit;
+}
+
+button {
+  font-family: inherit;
+}
+
+textarea, input {
+  font-family: inherit;
+}
+
+:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+/* --- Signature: focus-bracket viewfinder corners ---
+   Applied once per view, to the single "active" surface
+   (the input card in the hero, the active discovery panel).
+   Echoes a camera/lens locking focus onto the idea. */
+.focus-frame {
+  position: relative;
+}
+
+.focus-frame::before,
+.focus-frame::after,
+.focus-frame > .fc-tl,
+.focus-frame > .fc-br {
+  content: "";
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  pointer-events: none;
+}
+
+.focus-frame::before {
+  top: -9px;
+  left: -9px;
+  border-top: 2px solid var(--focus);
+  border-left: 2px solid var(--focus);
+  border-top-left-radius: 4px;
+}
+
+.focus-frame::after {
+  bottom: -9px;
+  right: -9px;
+  border-bottom: 2px solid var(--focus);
+  border-right: 2px solid var(--focus);
+  border-bottom-right-radius: 4px;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .focus-frame::before,
+  .focus-frame::after {
+    animation: focus-lock 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  }
+  .focus-frame::before { animation-delay: 0s; }
+  .focus-frame::after { animation-delay: 0.06s; }
+}
+
+@keyframes focus-lock {
+  from {
+    opacity: 0;
+    transform: scale(1.35);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}
+
+/* Faint blueprint dot-grid, used behind the hero only */
+.grid-field {
+  background-image: radial-gradient(var(--line-strong) 1px, transparent 1px);
+  background-size: 26px 26px;
+}

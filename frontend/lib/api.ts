@@ -115,3 +115,49 @@ export async function generatePrototype(
     "Prototype generation"
   );
 }
+
+
+export async function exportPRDDocx(
+  productState: any,
+  includeCritique: boolean = true
+) {
+  const response = await fetch(
+    `${API_URL}/api/export-prd-docx`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        product: productState,
+        include_critique: includeCritique,
+      }),
+    }
+  );
+
+  if (!response.ok) {
+    const text = await response.text();
+    throw new Error(
+      `Word export failed (${response.status}): ${text}`
+    );
+  }
+
+  const blob = await response.blob();
+
+  const disposition = response.headers.get(
+    "Content-Disposition"
+  );
+  const match = disposition?.match(
+    /filename="?([^"]+)"?/
+  );
+  const filename = match?.[1] || "product-requirements.docx";
+
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+}
