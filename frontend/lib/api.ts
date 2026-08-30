@@ -1,114 +1,104 @@
-<<<<<<< HEAD
-const API_URL = "https://speclens-production.up.railway.app";
-=======
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://speclens-production.up.railway.app";
->>>>>>> 0da939d (Fix API integration and deployment)
+const API_URL =
+  process.env.NEXT_PUBLIC_API_URL ||
+  "https://speclens-production.up.railway.app";
 
 async function handleResponse(response: Response, errorPrefix: string) {
   const text = await response.text();
 
-  console.log(`${errorPrefix} STATUS:`, response.status);
-  console.log(`${errorPrefix} RESPONSE:`, text);
-
   if (!response.ok) {
-    throw new Error(`${errorPrefix} failed (${response.status}): ${text}`);
+    let message = text;
+
+    try {
+      const data = JSON.parse(text);
+      message = data.detail || data.message || text;
+    } catch {
+      // Use raw text if response isn't JSON
+    }
+
+    throw new Error(`${errorPrefix}: ${message}`);
   }
 
   try {
     return JSON.parse(text);
   } catch {
-    throw new Error(`${errorPrefix} returned invalid JSON: ${text}`);
+    return text;
   }
 }
 
-export async function discover(message: string, productState: any = null) {
+export async function discover(
+  message: string,
+  productState: any = null
+) {
   const response = await fetch(`${API_URL}/discover`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: {
+      "Content-Type": "application/json",
+    },
     body: JSON.stringify({
       message,
       current_state: productState,
     }),
   });
 
-<<<<<<< HEAD
-export async function discover(
-  message: string,
-  productState: any = null
-) {
-  const body = {
-    idea: message,
-    answers: productState?.answers || [],
-  };
-
-  console.log("DISCOVER REQUEST:", body);
-
-  const response = await fetch(
-    `${API_URL}/discover`,
-    {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(body),
-    }
-  );
-
-=======
->>>>>>> 0da939d (Fix API integration and deployment)
-  return handleResponse(response, "Discovery");
+  return handleResponse(response, "Discovery failed");
 }
 
-export async function generatePRD(productState: any) {
+export async function generatePRD(product: any) {
   const response = await fetch(`${API_URL}/api/generate-prd`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(productState),
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(product),
   });
-  return handleResponse(response, "PRD generation");
+
+  return handleResponse(response, "PRD generation failed");
 }
 
-export async function critiquePRD(productState: any) {
+export async function critiquePRD(product: any) {
   const response = await fetch(`${API_URL}/api/critique-prd`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(productState),
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(product),
   });
-  return handleResponse(response, "PRD critique");
+
+  return handleResponse(response, "PRD critique failed");
 }
 
-export async function generatePrototype(productState: any) {
+export async function generatePrototype(product: any) {
   const response = await fetch(`${API_URL}/api/generate-prototype`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(productState),
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(product),
   });
-  return handleResponse(response, "Prototype generation");
+
+  return handleResponse(response, "Prototype generation failed");
 }
 
-export async function exportPRDDocx(productState: any, includeCritique: boolean = true) {
+export async function exportPRDDocx(
+  product: any,
+  critique: any = null,
+  includeCritique = true
+) {
   const response = await fetch(`${API_URL}/api/export-prd-docx`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ product: productState, include_critique: includeCritique }),
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      product,
+      critique,
+      include_critique: includeCritique,
+    }),
   });
 
   if (!response.ok) {
-    const text = await response.text();
-    throw new Error(`Word export failed (${response.status}): ${text}`);
+    throw new Error("Word export failed");
   }
 
-  const blob = await response.blob();
-  const disposition = response.headers.get("Content-Disposition");
-  const match = disposition?.match(/filename="?([^"]+)"?/);
-  const filename = match?.[1] || "product-requirements.docx";
-
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement("a");
-  link.href = url;
-  link.download = filename;
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-  URL.revokeObjectURL(url);
+  return response.blob();
 }
