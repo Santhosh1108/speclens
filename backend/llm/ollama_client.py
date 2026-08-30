@@ -1,8 +1,15 @@
-import requests
+import os
+from groq import Groq
 
 
-OLLAMA_URL = "http://localhost:11434/api/chat"
-MODEL = "qwen3:4b"
+MODEL = os.getenv(
+    "GROQ_MODEL",
+    "llama-3.3-70b-versatile",
+)
+
+client = Groq(
+    api_key=os.environ.get("GROQ_API_KEY")
+)
 
 
 def ask_model(
@@ -20,9 +27,9 @@ def ask_model(
             "Do not write anything before or after the JSON."
         )
 
-    payload = {
-        "model": MODEL,
-        "messages": [
+    completion = client.chat.completions.create(
+        model=MODEL,
+        messages=[
             {
                 "role": "system",
                 "content": system_prompt,
@@ -32,23 +39,11 @@ def ask_model(
                 "content": prompt,
             },
         ],
-        "stream": False,
-        "think": False,
-        "format": "json",
-        "options": {
-            "temperature": 0,
-            "num_predict": num_predict,
+        temperature=0,
+        max_tokens=num_predict,
+        response_format={
+            "type": "json_object"
         },
-    }
-
-    response = requests.post(
-        OLLAMA_URL,
-        json=payload,
-        timeout=180,
     )
 
-    response.raise_for_status()
-
-    data = response.json()
-
-    return data["message"]["content"].strip()
+    return completion.choices[0].message.content.strip()
