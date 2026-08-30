@@ -1,5 +1,6 @@
 import os
 <<<<<<< HEAD
+<<<<<<< HEAD
 from groq import Groq
 
 
@@ -14,32 +15,24 @@ client = Groq(
 =======
 from pathlib import Path
 
+=======
+>>>>>>> 0da939d (Fix API integration and deployment)
 from dotenv import load_dotenv
 from groq import Groq
 
+load_dotenv()
 
-# Load backend/.env
-BACKEND_DIR = Path(__file__).resolve().parent.parent
-ENV_PATH = BACKEND_DIR / ".env"
-
-load_dotenv(dotenv_path=ENV_PATH)
-
+MODEL = os.getenv("GROQ_MODEL", "openai/gpt-oss-20b")
 API_KEY = os.getenv("GROQ_API_KEY")
 
 if not API_KEY:
-    raise RuntimeError(
-        f"GROQ_API_KEY not found. Expected .env at: {ENV_PATH}"
-    )
-
-
-# Confirmed available for your Groq API key
-MODEL = "openai/gpt-oss-20b"
-
+    raise RuntimeError("GROQ_API_KEY is not set.")
 
 client = Groq(api_key=API_KEY)
 >>>>>>> 94154eb (Replace Ollama with Groq API)
 
 
+<<<<<<< HEAD
 def ask_model(
     prompt: str,
     num_predict: int = 1000,
@@ -92,26 +85,26 @@ def ask_model(
                 "role": "system",
                 "content": system_prompt,
             }
+=======
+def ask_model(prompt: str, num_predict: int = 1000, system_prompt: str | None = None) -> str:
+    if system_prompt is None:
+        system_prompt = (
+            "You are a JSON extraction engine. Return ONLY valid JSON requested by the user. "
+            "Do not explain your reasoning or add markdown."
+>>>>>>> 0da939d (Fix API integration and deployment)
         )
-
-    messages.append(
-        {
-            "role": "user",
-            "content": prompt,
-        }
-    )
-
-    print(f"USING MODEL: {MODEL}")
 
     completion = client.chat.completions.create(
         model=MODEL,
-        messages=messages,
+        messages=[
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": prompt},
+        ],
         temperature=0,
-        max_tokens=max(num_predict, 2000),
-        response_format={
-            "type": "json_object"
-        },
+        max_tokens=num_predict,
+        response_format={"type": "json_object"},
     )
+<<<<<<< HEAD
 
     result = completion.choices[0].message.content
 
@@ -120,3 +113,6 @@ def ask_model(
 
     return result.strip()
 >>>>>>> 94154eb (Replace Ollama with Groq API)
+=======
+    return (completion.choices[0].message.content or "").strip()
+>>>>>>> 0da939d (Fix API integration and deployment)
