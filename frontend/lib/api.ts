@@ -1,4 +1,4 @@
-const API_URL = "";
+const API_URL = "https://speclens-production.up.railway.app";
 
 async function handleResponse(
   response: Response,
