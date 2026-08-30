@@ -5,27 +5,21 @@ from fastapi.responses import StreamingResponse
 from agents.discovery import discover_product
 from agents.prd_generator import expand_product, generate_prd
 from agents.prd_critic import critique_prd
-from agents.prototype_generator import (
-    generate_prototype_plan,
-    render_prototype,
-)
+from agents.prototype_generator import generate_prototype_plan, render_prototype
 from exporters.docx_exporter import build_prd_docx
 from schemas.product_model import ProductModel
 
 
 app = FastAPI(
     title="SpecLens API",
-    version="0.2.0",
+    version="0.2.0"
 )
 
 
-# Allow the deployed Vercel frontend to call this Railway API
+# TEMPORARY: Allow frontend requests from any origin
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "https://speclens-delta.vercel.app",
-        "http://localhost:3000",
-    ],
+    allow_origins=["*"],
     allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -38,7 +32,7 @@ def product_from_payload(payload: dict) -> ProductModel:
     except Exception as exc:
         raise HTTPException(
             status_code=422,
-            detail=f"Invalid product state: {exc}",
+            detail=f"Invalid product state: {exc}"
         ) from exc
 
 
@@ -46,7 +40,7 @@ def product_from_payload(payload: dict) -> ProductModel:
 def root():
     return {
         "message": "SpecLens API is running",
-        "version": "0.2.0",
+        "version": "0.2.0"
     }
 
 
@@ -58,13 +52,15 @@ def health():
 @app.post("/discover")
 def discover(data: dict):
     message = str(
-        data.get("message") or data.get("idea") or ""
+        data.get("message")
+        or data.get("idea")
+        or ""
     ).strip()
 
     if not message:
         raise HTTPException(
             status_code=400,
-            detail="A product idea or discovery answer is required.",
+            detail="A product idea or discovery answer is required."
         )
 
     current_state_payload = (
@@ -81,7 +77,7 @@ def discover(data: dict):
 
         return discover_product(
             message=message,
-            current_state=current_state,
+            current_state=current_state
         )
 
     except HTTPException:
@@ -90,7 +86,7 @@ def discover(data: dict):
     except Exception as exc:
         raise HTTPException(
             status_code=500,
-            detail=f"Discovery failed: {exc}",
+            detail=f"Discovery failed: {exc}"
         ) from exc
 
 
@@ -104,21 +100,18 @@ def generate_prd_endpoint(data: dict):
 
         prd = generate_prd(
             expanded_product,
-            _expanded=expanded,
+            _expanded=expanded
         )
 
         return {
             "prd": prd,
-            "product_state": expanded_product.model_dump(),
+            "product_state": expanded_product.model_dump()
         }
-
-    except HTTPException:
-        raise
 
     except Exception as exc:
         raise HTTPException(
             status_code=500,
-            detail=f"PRD generation failed: {exc}",
+            detail=f"PRD generation failed: {exc}"
         ) from exc
 
 
@@ -128,13 +121,10 @@ def critique_prd_endpoint(data: dict):
         product = product_from_payload(data)
         return critique_prd(product)
 
-    except HTTPException:
-        raise
-
     except Exception as exc:
         raise HTTPException(
             status_code=500,
-            detail=f"PRD critique failed: {exc}",
+            detail=f"PRD critique failed: {exc}"
         ) from exc
 
 
@@ -148,16 +138,13 @@ def generate_prototype_endpoint(data: dict):
 
         return {
             "prototype": prototype.model_dump(),
-            "html": html,
+            "html": html
         }
-
-    except HTTPException:
-        raise
 
     except Exception as exc:
         raise HTTPException(
             status_code=500,
-            detail=f"Prototype generation failed: {exc}",
+            detail=f"Prototype generation failed: {exc}"
         ) from exc
 
 
@@ -176,10 +163,8 @@ def export_prd_docx_endpoint(data: dict):
 
         document = build_prd_docx(
             product,
-            critique=critique,
+            critique=critique
         )
-
-        filename = "product-requirements.docx"
 
         return StreamingResponse(
             document,
@@ -188,17 +173,13 @@ def export_prd_docx_endpoint(data: dict):
                 "wordprocessingml.document"
             ),
             headers={
-                "Content-Disposition": (
-                    f'attachment; filename="{filename}"'
-                )
+                "Content-Disposition":
+                    'attachment; filename="product-requirements.docx"'
             },
         )
-
-    except HTTPException:
-        raise
 
     except Exception as exc:
         raise HTTPException(
             status_code=500,
-            detail=f"Word export failed: {exc}",
+            detail=f"Word export failed: {exc}"
         ) from exc
