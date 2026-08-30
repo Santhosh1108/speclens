@@ -30,14 +30,14 @@ export async function discover(
   productState: any = null
 ) {
   const body = {
-    message,
-    product_state: productState,
+    idea: message,
+    answers: productState?.answers || [],
   };
 
   console.log("DISCOVER REQUEST:", body);
 
   const response = await fetch(
-    `${API_URL}/api/discover`,
+    `${API_URL}/discover`,
     {
       method: "POST",
       headers: {
@@ -47,10 +47,7 @@ export async function discover(
     }
   );
 
-  return handleResponse(
-    response,
-    "Discovery"
-  );
+  return handleResponse(response, "Discovery");
 }
 
 
