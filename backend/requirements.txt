@@ -1,12 +1,9 @@
-<<<<<<< HEAD
 fastapi
 uvicorn[standard]
 groq
 python-docx
-=======
 fastapi
 uvicorn[standard]
 groq
 python-dotenv
 python-docx
->>>>>>> 0da939d (Fix API integration and deployment)
