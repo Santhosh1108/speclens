@@ -5,14 +5,20 @@ import posthog from "posthog-js";
 
 export default function PostHogProvider() {
   useEffect(() => {
-    posthog.init("phc_ys7fsXsuaPVUCnZsW9gXhrUF4W9LKC2cLvYDDS3uace7", {
-      api_host: "https://us.i.posthog.com",
+    const key = process.env.NEXT_PUBLIC_POSTHOG_KEY;
+    const apiHost = process.env.NEXT_PUBLIC_POSTHOG_HOST || "https://us.i.posthog.com";
+
+    if (!key) return;
+
+    posthog.init(key, {
+      api_host: apiHost,
       capture_pageview: true,
+      capture_pageleave: true,
     });
 
-    posthog.capture("speclens_test_event", {
-      source: "manual_test",
-    });
+    return () => {
+      posthog.reset();
+    };
   }, []);
 
   return null;
