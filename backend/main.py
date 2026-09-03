@@ -1,5 +1,7 @@
 import logging
 import os
+import time
+from collections import defaultdict, deque
 from typing import Any
 
 from fastapi import FastAPI, HTTPException, Request
@@ -19,6 +21,8 @@ logging.basicConfig(level=os.getenv("LOG_LEVEL", "INFO"))
 
 MAX_BODY_BYTES = int(os.getenv("MAX_BODY_BYTES", "65536"))
 MAX_DISCOVERY_MESSAGE_CHARS = int(os.getenv("MAX_DISCOVERY_MESSAGE_CHARS", "4000"))
+RATE_LIMIT_REQUESTS = int(os.getenv("RATE_LIMIT_REQUESTS", "30"))
+RATE_LIMIT_WINDOW_SECONDS = int(os.getenv("RATE_LIMIT_WINDOW_SECONDS", "60"))
 ALLOWED_ORIGINS = [
     origin.strip()
     for origin in os.getenv(
@@ -28,6 +32,8 @@ ALLOWED_ORIGINS = [
     if origin.strip()
 ]
 
+_request_times: dict[str, deque[float]] = defaultdict(deque)
+
 
 class RequestLimitMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
@@ -35,19 +41,27 @@ class RequestLimitMiddleware(BaseHTTPMiddleware):
         if content_length:
             try:
                 if int(content_length) > MAX_BODY_BYTES:
-                    return JSONResponse(
-                        {"detail": "Request body too large."},
-                        status_code=413,
-                    )
+                    return JSONResponse({"detail": "Request body too large."}, status_code=413)
             except ValueError:
-                return JSONResponse(
-                    {"detail": "Invalid Content-Length."},
-                    status_code=400,
-                )
+                return JSONResponse({"detail": "Invalid Content-Length."}, status_code=400)
+
+        client_ip = request.client.host if request.client else "unknown"
+        now = time.monotonic()
+        timestamps = _request_times[client_ip]
+        cutoff = now - RATE_LIMIT_WINDOW_SECONDS
+        while timestamps and timestamps[0] <= cutoff:
+            timestamps.popleft()
+        if len(timestamps) >= RATE_LIMIT_REQUESTS:
+            return JSONResponse(
+                {"detail": "Too many requests. Please try again shortly."},
+                status_code=429,
+                headers={"Retry-After": str(RATE_LIMIT_WINDOW_SECONDS)},
+            )
+        timestamps.append(now)
         return await call_next(request)
 
 
-app = FastAPI(title="SpecLens API", version="0.2.1")
+app = FastAPI(title="SpecLens API", version="0.2.2")
 app.add_middleware(RequestLimitMiddleware)
 app.add_middleware(
     CORSMiddleware,
@@ -75,7 +89,7 @@ def internal_error(message: str) -> HTTPException:
 
 @app.get("/")
 def root():
-    return {"message": "SpecLens API is running", "version": "0.2.1"}
+    return {"message": "SpecLens API is running", "version": "0.2.2"}
 
 
 @app.get("/health")
@@ -93,11 +107,7 @@ def discover(data: dict):
 
     current_state_payload = data.get("current_state") or data.get("product_state")
     try:
-        current_state = (
-            ProductModel.model_validate(current_state_payload)
-            if current_state_payload
-            else None
-        )
+        current_state = ProductModel.model_validate(current_state_payload) if current_state_payload else None
         return discover_product(message=message, current_state=current_state)
     except HTTPException:
         raise
