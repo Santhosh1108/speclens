@@ -78,6 +78,7 @@ setError("");
       setProductState(result.product_state);
       setMessage("");
     } catch (error: any) {
+      posthog.capture("discovery_failed");
       const errorMsg = error?.message || "Discovery failed.";
       
       // Provide helpful error messages
@@ -109,6 +110,7 @@ setExpandedProductState(result.product_state || productState);
 setStep("prd");
 posthog.capture("prd_completed");
     } catch (error: any) {
+      posthog.capture("prd_generation_failed");
       setError(error instanceof Error ? error.message : "PRD generation failed. Please try again.");
       console.error("PRD generation error:", error);
     } finally {
@@ -129,6 +131,7 @@ setStep("critique");
 posthog.capture("critique_completed");
       
     } catch (error: any) {
+      posthog.capture("critique_generation_failed");
       setError(error instanceof Error ? error.message : "PRD critique failed. Please try again.");
       console.error("Critique error:", error);
     } finally {
@@ -148,6 +151,7 @@ posthog.capture("critique_completed");
 setStep("prototype");
 posthog.capture("prototype_completed");
     } catch (error: any) {
+      posthog.capture("prototype_generation_failed");
       setError(error instanceof Error ? error.message : "Prototype generation failed. Please try again.");
       console.error("Prototype error:", error);
     } finally {
