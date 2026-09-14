@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from "react";
 
+import posthog from "posthog-js";
+
 import {
   discover,
   generatePRD,
