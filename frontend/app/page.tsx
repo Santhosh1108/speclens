@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 import {
   discover,
@@ -20,6 +20,12 @@ import { StepIndicator, lineStyle } from "../components/ui";
 
 type Step = "discover" | "prd" | "critique" | "prototype";
 
+const EXAMPLE_IDEAS = [
+  "A mobile app that helps teams schedule meetings by understanding everyone's calendars",
+  "A productivity tool that automatically transcribes and summarizes voice notes into actionable tasks",
+  "A Chrome extension that finds the best time to post on social media based on audience engagement patterns",
+];
+
 export default function Home() {
   const [message, setMessage] = useState("");
   const [reply, setReply] = useState("");
@@ -31,6 +37,27 @@ export default function Home() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [step, setStep] = useState<Step>("discover");
+  const [backendHealthy, setBackendHealthy] = useState<boolean | null>(null);
+
+  // Check backend health on mount
+  useEffect(() => {
+    const checkBackend = async () => {
+      try {
+        const response = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL || "https://speclens-production.up.railway.app"}/health`,
+          { method: "GET" }
+        );
+        setBackendHealthy(response.ok);
+      } catch (err) {
+        setBackendHealthy(false);
+      }
+    };
+    checkBackend();
+  }, []);
+
+  function handleExampleClick(idea: string) {
+    setMessage(idea);
+  }
 
   async function handleDiscover() {
     if (!message.trim() || loading) return;
@@ -43,9 +70,19 @@ export default function Home() {
       setReply(result.reply);
       setProductState(result.product_state);
       setMessage("");
-    } catch (error) {
-      console.error(error);
-      setError(error instanceof Error ? error.message : "Discovery failed.");
+    } catch (error: any) {
+      const errorMsg = error?.message || "Discovery failed.";
+      
+      // Provide helpful error messages
+      let helpfulError = errorMsg;
+      if (errorMsg.includes("Failed to fetch")) {
+        helpfulError = "Backend is not responding. Check your internet connection or try again in a moment.";
+      } else if (errorMsg.includes("Network")) {
+        helpfulError = "Network error. Make sure the backend API is deployed and accessible.";
+      }
+      
+      setError(helpfulError);
+      console.error("Discovery error:", error);
     } finally {
       setLoading(false);
     }
@@ -62,9 +99,9 @@ export default function Home() {
       setPrd(result.prd);
       setExpandedProductState(result.product_state || productState);
       setStep("prd");
-    } catch (error) {
-      console.error(error);
-      setError(error instanceof Error ? error.message : "PRD generation failed.");
+    } catch (error: any) {
+      setError(error instanceof Error ? error.message : "PRD generation failed. Please try again.");
+      console.error("PRD generation error:", error);
     } finally {
       setLoading(false);
     }
@@ -80,9 +117,9 @@ export default function Home() {
       const result = await critiquePRD(productState);
       setCritique(result);
       setStep("critique");
-    } catch (error) {
-      console.error(error);
-      setError(error instanceof Error ? error.message : "PRD critique failed.");
+    } catch (error: any) {
+      setError(error instanceof Error ? error.message : "PRD critique failed. Please try again.");
+      console.error("Critique error:", error);
     } finally {
       setLoading(false);
     }
@@ -98,9 +135,9 @@ export default function Home() {
       const result = await generatePrototype(productState);
       setPrototype(result);
       setStep("prototype");
-    } catch (error) {
-      console.error(error);
-      setError(error instanceof Error ? error.message : "Prototype generation failed.");
+    } catch (error: any) {
+      setError(error instanceof Error ? error.message : "Prototype generation failed. Please try again.");
+      console.error("Prototype error:", error);
     } finally {
       setLoading(false);
     }
@@ -111,9 +148,9 @@ export default function Home() {
 
     try {
       await exportPRDDocx(expandedProductState, !!critique);
-    } catch (error) {
-      console.error(error);
-      setError(error instanceof Error ? error.message : "Word export failed.");
+    } catch (error: any) {
+      setError(error instanceof Error ? error.message : "Word export failed. Please try again.");
+      console.error("Export error:", error);
     }
   }
 
@@ -132,6 +169,22 @@ export default function Home() {
   return (
     <main style={{ minHeight: "100vh", background: "var(--paper)", color: "var(--ink)" }}>
       <Header onReset={resetProject} />
+
+      {/* Backend Health Warning */}
+      {backendHealthy === false && !productState && (
+        <div
+          style={{
+            padding: "12px 16px",
+            background: "var(--danger-soft)",
+            color: "var(--danger)",
+            textAlign: "center",
+            fontSize: "13px",
+            borderBottom: "1px solid var(--danger)",
+          }}
+        >
+          ⚠️ Backend is not responding. Check your API URL in environment variables or try again later.
+        </div>
+      )}
 
       <div style={{ maxWidth: "1180px", margin: "0 auto", padding: "38px 28px 70px" }}>
         {/* PROGRESS */}
@@ -156,12 +209,50 @@ export default function Home() {
 
         {/* HERO */}
         {!productState && (
-          <Hero
-            message={message}
-            setMessage={setMessage}
-            loading={loading}
-            onSubmit={handleDiscover}
-          />
+          <>
+            <Hero
+              message={message}
+              setMessage={setMessage}
+              loading={loading}
+              onSubmit={handleDiscover}
+            />
+
+            {/* EXAMPLE IDEAS */}
+            <div style={{ marginTop: "32px" }}>
+              <p style={{ fontSize: "13px", color: "var(--text-secondary)", marginBottom: "12px" }}>
+                💡 Try one of these ideas:
+              </p>
+              <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                {EXAMPLE_IDEAS.map((idea, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => handleExampleClick(idea)}
+                    style={{
+                      padding: "10px 14px",
+                      border: "1px solid var(--border)",
+                      background: "var(--paper)",
+                      color: "var(--ink)",
+                      borderRadius: "var(--radius-sm)",
+                      cursor: "pointer",
+                      fontSize: "13px",
+                      textAlign: "left",
+                      transition: "all 0.2s",
+                    }}
+                    onMouseEnter={(e) => {
+                      (e.currentTarget as HTMLButtonElement).style.background = "var(--paper-hover)";
+                      (e.currentTarget as HTMLButtonElement).style.borderColor = "var(--primary)";
+                    }}
+                    onMouseLeave={(e) => {
+                      (e.currentTarget as HTMLButtonElement).style.background = "var(--paper)";
+                      (e.currentTarget as HTMLButtonElement).style.borderColor = "var(--border)";
+                    }}
+                  >
+                    {idea}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </>
         )}
 
         {/* DISCOVERY */}
@@ -208,9 +299,30 @@ export default function Home() {
               borderRadius: "var(--radius-md)",
               fontSize: "13px",
               whiteSpace: "pre-wrap",
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
             }}
           >
-            {error}
+            <span>{error}</span>
+            <button
+              onClick={() => {
+                if (productState) {
+                  handleDiscover();
+                }
+              }}
+              style={{
+                background: "var(--danger)",
+                color: "white",
+                border: "none",
+                borderRadius: "4px",
+                padding: "6px 12px",
+                cursor: "pointer",
+                fontSize: "12px",
+              }}
+            >
+              Retry
+            </button>
           </div>
         )}
       </div>
