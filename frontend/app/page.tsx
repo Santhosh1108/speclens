@@ -102,10 +102,12 @@ setError("");
     setError("");
 
     try {
-      const result = await generatePRD(productState);
+  const result = await generatePRD(productState);
+  posthog.capture("discovery_completed");
       setPrd(result.prd);
-      setExpandedProductState(result.product_state || productState);
-      setStep("prd");
+setExpandedProductState(result.product_state || productState);
+setStep("prd");
+posthog.capture("prd_completed");
     } catch (error: any) {
       setError(error instanceof Error ? error.message : "PRD generation failed. Please try again.");
       console.error("PRD generation error:", error);
@@ -123,7 +125,9 @@ setError("");
     try {
       const result = await critiquePRD(productState);
       setCritique(result);
-      setStep("critique");
+setStep("critique");
+posthog.capture("critique_completed");
+      
     } catch (error: any) {
       setError(error instanceof Error ? error.message : "PRD critique failed. Please try again.");
       console.error("Critique error:", error);
@@ -141,7 +145,8 @@ setError("");
     try {
       const result = await generatePrototype(productState);
       setPrototype(result);
-      setStep("prototype");
+setStep("prototype");
+posthog.capture("prototype_completed");
     } catch (error: any) {
       setError(error instanceof Error ? error.message : "Prototype generation failed. Please try again.");
       console.error("Prototype error:", error);
@@ -155,6 +160,7 @@ setError("");
 
     try {
       await exportPRDDocx(expandedProductState, !!critique);
+      posthog.capture("docx_exported");
     } catch (error: any) {
       setError(error instanceof Error ? error.message : "Word export failed. Please try again.");
       console.error("Export error:", error);
