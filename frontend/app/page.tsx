@@ -65,7 +65,12 @@ export default function Home() {
     if (!message.trim() || loading) return;
 
     setLoading(true);
-    setError("");
+
+if (!productState) {
+  posthog.capture("idea_created");
+}
+
+setError("");
 
     try {
       const result = await discover(message, productState);
