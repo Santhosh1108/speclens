@@ -163,7 +163,7 @@ posthog.capture("prototype_completed");
     if (!expandedProductState) return;
 
     try {
-      await exportPRDDocx(expandedProductState, !!critique);
+      await exportPRDDocx(expandedProductState, critique, !!critique);
       posthog.capture("docx_exported");
     } catch (error: any) {
       setError(error instanceof Error ? error.message : "Word export failed. Please try again.");
